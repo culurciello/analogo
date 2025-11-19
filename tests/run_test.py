@@ -319,7 +319,7 @@ def select_series(
         return seen
 
     preferred_pairs = [
-        ("v(in)", "v(out)"),
+        ("v_in", "v_out"),
         ("vin", "vout"),
     ]
     for vin_name, vout_name in preferred_pairs:
@@ -329,7 +329,7 @@ def select_series(
     voltage_cols = [
         available[name]
         for name in available
-        if available[name].lower().startswith("v(") or available[name].lower().startswith("v")
+        if available[name].lower().startswith("v_") or available[name].lower().startswith("v")
     ]
     if voltage_cols:
         return voltage_cols
@@ -360,9 +360,9 @@ def plot_waveforms(
     plt.tight_layout()
     fig.savefig(output_path, dpi=150)
 
-    backend = plt.get_backend().lower()
-    if "agg" not in backend:
-        plt.show()
+    # backend = plt.get_backend().lower()
+    # if "agg" not in backend:
+        # plt.show()
     plt.close(fig)
 
 
@@ -376,7 +376,7 @@ def main() -> None:
     parser.add_argument(
         "--signals",
         nargs="+",
-        help="Optional list of vector names to plot (default auto-selects voltages such as v(in)/v(out)).",
+        help="Optional list of vector names to plot (default auto-selects voltages such as v_in/v_out).",
     )
     args = parser.parse_args()
 

@@ -14,6 +14,7 @@ if "MPLCONFIGDIR" not in os.environ:
     os.environ.setdefault("XDG_CACHE_HOME", str(cache_dir))
 
 from .agent import AnalogoAgent
+from .research import gather_spice_references
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,9 +27,15 @@ def parse_args() -> argparse.Namespace:
         help="Maximum number of design iterations (default: 5)",
     )
     parser.add_argument(
+        "--provider",
+        default="anthropic",
+        choices=["anthropic", "openai"],
+        help="LLM provider to use (default: anthropic for Claude)",
+    )
+    parser.add_argument(
         "--model",
-        default="gpt-4o-mini",
-        help="OpenAI model identifier (default: gpt-4o-mini)",
+        default=None,
+        help="Model identifier. Defaults: claude-sonnet-4-5 (anthropic), gpt-4o (openai)",
     )
     parser.add_argument(
         "--temperature",
@@ -47,12 +54,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    # Set default models based on provider
+    model = args.model
+    if model is None:
+        model = "claude-sonnet-4-5" if args.provider == "anthropic" else "gpt-4o"
+
+    research_summary = gather_spice_references(args.prompt)
     agent = AnalogoAgent(
         prompt=args.prompt,
         max_iterations=args.iterations,
-        model=args.model,
+        model=model,
+        provider=args.provider,
         temperature=args.temperature,
         output_root=args.output,
+        research_notes=research_summary,
     )
     agent.run()
     print(json.dumps(agent.summary(), indent=2))

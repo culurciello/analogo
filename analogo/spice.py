@@ -50,7 +50,7 @@ class SpiceRunner:
     def run(self, netlist_text: str, workdir: Path) -> SpiceRunResult:
         workdir.mkdir(parents=True, exist_ok=True)
         netlist_path = workdir / "circuit.sp"
-        log_path = workdir / "ngspice.log"
+        log_path = workdir / "circuit.log"
         raw_path = workdir / "sim.raw"
         csv_path = workdir / "analogo_waveform.csv"
 
@@ -60,10 +60,10 @@ class SpiceRunner:
             self.executable,
             "-b",
             "-o",
-            str(log_path),
+            log_path.name,
             "-r",
-            str(raw_path),
-            str(netlist_path),
+            raw_path.name,
+            netlist_path.name,
         ]
         try:
             completed = subprocess.run(
@@ -112,28 +112,51 @@ def _load_waveform(path: Path) -> Optional[Waveform]:
     if not path.exists():
         return None
 
-    with path.open("r", newline="") as handle:
-        reader = csv.reader(handle)
-        rows = [row for row in reader if row]
+    with path.open("r") as handle:
+        # Read all rows, splitting on whitespace (handles NGSpice's space-delimited output)
+        rows = []
+        for line in handle:
+            # Split on whitespace and filter empty strings
+            parts = [p.strip() for p in line.split() if p.strip()]
+            if parts:
+                rows.append(parts)
 
-    if not rows:
+    if not rows or len(rows) < 2:
         return None
 
     header = rows[0]
     if len(header) < 2:
         return None
 
-    columns: List[List[float]] = [[] for _ in header]
-    for row in rows[1:]:
-        for idx, cell in enumerate(row):
-            if idx >= len(columns):
-                continue
-            try:
-                columns[idx].append(float(cell))
-            except ValueError:
-                # Skip values we cannot turn into floats.
-                break
+    # For AC analysis, NGSpice outputs complex data with duplicate headers
+    # Clean up duplicates and keep unique column names
+    seen = set()
+    clean_header = []
+    col_indices = []
 
-    x_label = header[0]
-    series = {header[i + 1]: columns[i + 1] for i in range(len(header) - 1)}
+    for idx, name in enumerate(header):
+        if name not in seen:
+            seen.add(name)
+            clean_header.append(name)
+            col_indices.append(idx)
+
+    # Initialize columns for clean headers
+    columns: List[List[float]] = [[] for _ in clean_header]
+
+    # Parse data rows, using only the selected column indices
+    for row in rows[1:]:
+        if len(row) < len(header):
+            continue  # Skip malformed rows
+        try:
+            for col_idx, data_idx in enumerate(col_indices):
+                if data_idx < len(row):
+                    columns[col_idx].append(float(row[data_idx]))
+        except (ValueError, IndexError):
+            continue  # Skip rows we can't parse
+
+    if not columns or not columns[0]:
+        return None
+
+    x_label = clean_header[0]
+    series = {clean_header[i]: columns[i] for i in range(1, len(clean_header))}
     return Waveform(x_label=x_label, x=columns[0], series=series)

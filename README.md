@@ -46,7 +46,7 @@ Command-line flags:
 | `--output` | Directory for run artifacts | `runs/` |
 
 Each run creates a timestamped folder in the output directory containing per-iteration artifacts
-(`circuit.cir`, `ngspice.log`, `diagram.png`, `waveform.png`). The waveform image overlays the input and
+(`circuit.sp`, `circuit.log`, `diagram.png`, `waveform.png`). The waveform image overlays the input and
 output voltages so you can quickly verify behavior. The latest iteration is promoted to
 `runs/<timestamp>/final` for quick access.
 
