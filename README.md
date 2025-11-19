@@ -5,7 +5,7 @@
 Analogo is an autonomous AI agent that designs analog circuits with the help of OpenAI models and
 NGSpice simulations. Give it a natural-language description such as:
 
-> “Design an active band-pass filter 200-1000 Hz for an input analog signal of the range 0-20 kHz. Sweep an input 0-20 kHz and show that output is appropriately band-pass.”
+> “Design an RC lowpass filter with 8kHz cutoff frequency for input voltage 0-1V, and mak 20KHz.”
 
 The agent will:
 
