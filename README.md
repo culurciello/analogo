@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-OPENAI_API_KEY=sk-... python -m analogo.cli "design a band-pass filter 200-1000 Hz for input analog signal of the range 0-20 kHz"
+python -m analogo.cli "Design an RC lowpass filter with 8kHz cutoff frequency for input voltage 0-1V, and mak 20KHz"
 ```
 
 Command-line flags:
